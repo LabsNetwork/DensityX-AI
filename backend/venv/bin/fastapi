@@ -1,4 +1,6 @@
-#!/Users/pratyush/git/DensityX-AI/backend/venv/bin/python3
+#!/bin/sh
+'''exec' "/Users/gayathrisathish/Documents/DensityX AI/backend/venv/bin/python3" "$0" "$@"
+' '''
 import sys
 from fastapi.cli import main
 if __name__ == '__main__':
