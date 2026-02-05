@@ -20,9 +20,28 @@
     #panel .risk { color: #ff6b6b; font-weight: 600; }
     #panel .refresh { color: #888; font-size: 12px; margin-top: 1rem; }
     .leaflet-popup-content { margin: 8px 12px; font-size: 13px; }
+
+    /* Alert banner: fixed at top, red/amber */
+    #alertBanner {
+      display: none;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+      padding: 12px 20px; font-weight: 600; font-size: 15px;
+      background: linear-gradient(90deg, #c0392b 0%, #e67e22 100%);
+      color: #fff; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    #alertBanner.visible { display: block; }
+    body.banner-visible #app { padding-top: 48px; }
+
+    /* Red flashing zone for alert clusters */
+    @keyframes zone-pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.75; transform: scale(1.15); }
+    }
+    .cluster-marker-alert { animation: zone-pulse 1s ease-in-out infinite; }
   </style>
 </head>
 <body>
+  <div id="alertBanner" aria-live="polite"></div>
   <div id="app">
     <div id="map"></div>
     <div id="panel">
@@ -32,6 +51,15 @@
       <div class="stat"><strong>Cluster sizes:</strong> <span id="clusterSizes">—</span></div>
       <div class="stat"><strong class="risk">High-risk clusters:</strong> <span id="riskFlags" class="risk">—</span></div>
       <div class="refresh">Auto-refresh every 5s</div>
+
+      <section id="howItWorks" style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #333;">
+        <h3 style="margin: 0 0 0.5rem; font-size: 0.95rem;">How DensityX Detects Risk</h3>
+        <p style="margin: 0; color: #b0b0b0; font-size: 13px; line-height: 1.5;">
+          DensityX continuously monitors crowd movement and density in real time.
+          When the number of people in a specific area crosses a safe threshold,
+          the system flags the zone early and alerts operators before conditions become dangerous.
+        </p>
+      </section>
     </div>
   </div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
@@ -69,14 +97,23 @@
       clearClusterMarkers();
       const clusters = (density && density.clusters) || [];
       clusters.filter(c => c.risk).forEach(c => {
+        const isAlert = c.alert === true;
         const m = L.circleMarker([c.centroid_lat, c.centroid_lon], {
-          radius: 12, fillColor: '#e74c3c', color: '#c0392b', weight: 2, fillOpacity: 0.8
-        }).addTo(map).bindPopup('High-density cluster: ' + c.size + ' points');
+          radius: 12,
+          fillColor: isAlert ? '#c0392b' : '#e74c3c',
+          color: isAlert ? '#922b21' : '#c0392b',
+          weight: 2,
+          fillOpacity: 0.8
+        }).addTo(map).bindPopup((isAlert ? '⚠️ Alert: ' : '') + 'High-density cluster: ' + c.size + ' points');
+        if (isAlert && m.getElement()) m.getElement().classList.add('cluster-marker-alert');
         clusterMarkers.push(m);
       });
     }
 
     let lastCrowdCount = 0;
+    function zoneName(clusterId) {
+      return 'Zone ' + String.fromCharCode(65 + (clusterId % 26));
+    }
     function updatePanel(density, crowd) {
       const d = density || {};
       const pointCount = (crowd && crowd.points) ? crowd.points.length : d.point_count;
@@ -85,6 +122,20 @@
       document.getElementById('clusterCount').textContent = d.cluster_count ?? '—';
       document.getElementById('clusterSizes').textContent = (d.cluster_sizes && d.cluster_sizes.length) ? d.cluster_sizes.join(', ') : '—';
       document.getElementById('riskFlags').textContent = (d.risk_flags && d.risk_flags.length) ? d.risk_flags.join(', ') : '—';
+
+      const clusters = d.clusters || [];
+      const alertClusters = clusters.filter(c => c.alert).sort((a, b) => (b.size - a.size));
+      const banner = document.getElementById('alertBanner');
+      if (alertClusters.length > 0) {
+        const top = alertClusters[0];
+        banner.textContent = '⚠️ High crowd density detected in ' + zoneName(top.id) + ' (' + top.size + ' people)';
+        banner.classList.add('visible');
+        document.body.classList.add('banner-visible');
+        console.log('[DensityX alert] High crowd density:', alertClusters.map(c => ({ zone: zoneName(c.id), size: c.size })));
+      } else {
+        banner.classList.remove('visible');
+        document.body.classList.remove('banner-visible');
+      }
     }
 
     async function refresh() {

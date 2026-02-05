@@ -36,7 +36,7 @@ def tick() -> None:
         target,
     )
     memory_store.set_locations(points)
-    print(f"[simulation] generated {len(points)} points (target={target})")
+    print(f"[simulation] Generated {len(points)} points around Anna Nagar, Chennai (target={target})")
 
 
 def density_tick() -> None:
@@ -47,14 +47,17 @@ def density_tick() -> None:
     
     result = run_dbscan(
         points,
-        eps=settings.DBSCAN_EPS,
+        eps_meters=settings.DBSCAN_EPS_METERS,
         min_samples=settings.DBSCAN_MIN_SAMPLES,
-        high_risk_min_size=settings.HIGH_RISK_MIN_SIZE,
+        alert_threshold=settings.CLUSTER_ALERT_THRESHOLD,
     )
     memory_store.set_last_density_result(result)
     n = result["cluster_count"]
     sizes = result["cluster_sizes"]
     risk = result["risk_flags"]
+    risk_clusters = [c for c in result.get("clusters", []) if c.get("risk_flag")]
+    if risk_clusters:
+        print(f"[alert] High crowd density detected: {len(risk_clusters)} cluster(s) above threshold")
     print(f"[density] clusters={n} sizes={sizes} risk_flags={risk}")
 
 

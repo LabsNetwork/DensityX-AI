@@ -1,14 +1,14 @@
 # config/settings.py
 # Venue and simulation settings for crowd generation (in-memory only).
 
-# Venue center (latitude, longitude) — fake but realistic for a bounded area
-VENUE_CENTER_LAT = 37.7749
-VENUE_CENTER_LNG = -122.4194
+# Venue center (latitude, longitude) — anchored in Anna Nagar, Chennai
+VENUE_CENTER_LAT = 13.0850
+VENUE_CENTER_LNG = 80.2101
 
-# Bounding box: half-extents from center (degrees). Points generated in
-# [center - delta, center + delta] for both lat and lng.
-DELTA_LAT = 0.001
-DELTA_LNG = 0.001
+# Bounding box around Anna Nagar (13.075–13.095 lat, 80.195–80.225 lng)
+# Use half-extents so generation stays in this window.
+DELTA_LAT = 0.010   # ~13.075 to 13.095
+DELTA_LNG = 0.015   # ~80.195 to 80.225
 
 # Base number of simulated attendees (dynamic; can change at runtime)
 BASE_CROWD_SIZE = 200
@@ -28,9 +28,11 @@ HOTSPOT_DELTA = 0.00003
 # --- Density detection (DBSCAN) ---
 # How often to run DBSCAN on recent locations (seconds)
 DBSCAN_INTERVAL_SECONDS = 10
-# Max distance (degrees) for points in same cluster; ~0.0005 ≈ 55m at equator
-DBSCAN_EPS = 0.0004 #max distance between two points to be considered neighbors
-# Min points to form a cluster
-DBSCAN_MIN_SAMPLES = 2
+# Max distance between points in meters for clustering (venue-scale)
+DBSCAN_EPS_METERS = 40
+# Min points to form a cluster (proactive; crowd-scale)
+DBSCAN_MIN_SAMPLES = 12
 # Cluster size >= this is flagged as high-risk
 HIGH_RISK_MIN_SIZE = 5
+# Proactive alert: cluster size above this triggers UI alert and red zone (before extreme crowding)
+CLUSTER_ALERT_THRESHOLD = 800
