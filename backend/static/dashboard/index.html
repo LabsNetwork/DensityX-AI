@@ -559,19 +559,33 @@
       
       // Build heatmap from ALL crowd points with uniform weight
       const heatData = points.map(p => [p.lat, p.lon, 1]);
-      const dynamicMax = Math.max(0.5, points.length / 250);
+      const dynamicMax = Math.max(1.0, points.length / 350);
       
-      if (heatLayer) map.removeLayer(heatLayer);
+      // Properly remove old heat layer before creating new one
+      if (heatLayer !== null && heatLayer !== undefined) {
+        try {
+          map.removeLayer(heatLayer);
+        } catch (e) {
+          console.warn('Could not remove existing heatLayer:', e);
+        }
+        heatLayer = null;
+      }
+      
+      // Create and add new heatmap layer
+      console.log("HEATMAP CONFIG RUNNING");
       heatLayer = L.heatLayer(heatData, {
-        radius: 35,
-        blur: 25,
+        radius: 40,
+        blur: 30,
         maxZoom: 17,
         max: dynamicMax,
         gradient: {
-          0.1: 'green',
-          0.3: 'yellow',
-          0.6: 'orange',
-          0.9: 'red'
+          0.00: '#00ff00',
+          0.20: '#66ff00',
+          0.40: '#ccff00',
+          0.55: '#ffff00',
+          0.70: '#ffcc00',
+          0.85: '#ff6600',
+          1.00: '#ff0000'
         }
       }).addTo(map);
 
