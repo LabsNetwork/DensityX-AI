@@ -10,9 +10,9 @@ A modern, mobile-friendly event check-in interface that guides users through tic
 
 ### URLs
 
-- **Production Check-In**: `http://localhost:8000/onboarding`
-- **Alternate Route**: `http://localhost:8000/static/onboarding/`
-- **Dashboard (Admin)**: `http://localhost:8000/dashboard`
+- **Production Check-In**: `http://localhost:8003/onboarding`
+- **Alternate Route**: `http://localhost:8003/static/onboarding/`
+- **Dashboard (Admin)**: `http://localhost:8003/dashboard`
 
 ### File Location
 
@@ -257,9 +257,9 @@ clearError(elementId)            // Hide error
 # Backend already serves static files
 cd backend
 source venv/bin/activate
-python -m uvicorn main:app --reload --port 8000
+python -m uvicorn main:app --reload --port 8003
 
-# Access at http://localhost:8000/onboarding
+# Access at http://localhost:8003/onboarding
 ```
 
 ### Production

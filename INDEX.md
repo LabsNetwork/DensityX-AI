@@ -248,8 +248,8 @@ START
 
 ### Direct Links
 - Code files: See file structure sections
-- API docs: Swagger at `http://localhost:8000/docs`
-- Live system: Check `http://localhost:8000/info`
+- API docs: Swagger at `http://localhost:8003/docs`
+- Live system: Check `http://localhost:8003/info`
 
 ---
 

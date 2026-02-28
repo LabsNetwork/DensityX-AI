@@ -49,7 +49,7 @@ USE_SIMULATION = False
 
 ```bash
 cd backend
-python -m uvicorn main:app --reload --port 8000
+python -m uvicorn main:app --reload --port 8003
 ```
 
 Output will show:
@@ -413,7 +413,7 @@ ls -la backend/data/tickets.csv
 
 ```bash
 # Register with valid ticket
-curl -X POST http://localhost:8000/user/register \
+curl -X POST http://localhost:8003/user/register \
   -H "Content-Type: application/json" \
   -d '{
     "ticket_id": "DX-A9F3K2",
@@ -424,7 +424,7 @@ curl -X POST http://localhost:8000/user/register \
 # Response: 201 Created
 
 # Try with invalid ticket
-curl -X POST http://localhost:8000/user/register \
+curl -X POST http://localhost:8003/user/register \
   -H "Content-Type: application/json" \
   -d '{"ticket_id": "INVALID"}'
 
@@ -434,7 +434,7 @@ curl -X POST http://localhost:8000/user/register \
 ### Test 3: Update Location
 
 ```bash
-curl -X POST http://localhost:8000/user/location \
+curl -X POST http://localhost:8003/user/location \
   -H "Content-Type: application/json" \
   -d '{
     "ticket_id": "DX-A9F3K2",
@@ -447,7 +447,7 @@ curl -X POST http://localhost:8000/user/location \
 ### Test 4: Check Active Users
 
 ```bash
-curl http://localhost:8000/user/active-count
+curl http://localhost:8003/user/active-count
 
 # Response:
 # {"active_users": 1, "gps_enabled": 1}
@@ -456,7 +456,7 @@ curl http://localhost:8000/user/active-count
 ### Test 5: Verify Clustering
 
 ```bash
-curl http://localhost:8000/density
+curl http://localhost:8003/density
 
 # REAL MODE output shows:
 # {
@@ -625,7 +625,7 @@ grep "DX-A9F3K2" backend/data/tickets.csv
 Full Swagger docs available at:
 
 ```
-http://localhost:8000/docs
+http://localhost:8003/docs
 ```
 
 ---

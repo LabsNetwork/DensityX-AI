@@ -67,12 +67,12 @@ pip install -r requirements.txt
 cp .env.example .env
 
 # Run development server
-python -m uvicorn main:app --reload --port 8000
+python -m uvicorn main:app --reload --port 8003
 ```
 
-Backend will be available at: **http://localhost:8000**
-- API Docs: http://localhost:8000/docs
-- Dashboard: http://localhost:8000/static/dashboard/index.html
+Backend will be available at: **http://localhost:8003**
+- API Docs: http://localhost:8003/docs
+- Dashboard: http://localhost:8003/static/dashboard/index.html
 
 ### Configuration
 
@@ -110,7 +110,7 @@ docker-compose down
 ```
 
 The system will:
-- Run backend on port 8000
+- Run backend on port 8003
 - Run Nginx reverse proxy on port 80
 - Auto-restart on failure
 - Include health checks
@@ -173,10 +173,10 @@ Response:
 
 ### Trigger Surge
 ```
-POST /crowd/surge?extra=500
+POST /crowd/surge?extra=300   # normal demo button value
 
 Response:
-{"ok": true, "message": "Surge triggered: +500 attendees"}
+{"ok": true, "message": "Surge triggered: +300 attendees"}
 ```
 
 ## Dashboard Features
@@ -219,7 +219,7 @@ CLUSTER_ALERT_THRESHOLD=50         # Lower alert threshold
 ## Troubleshooting
 
 ### Dashboard not loading
-1. Check backend is running: `curl http://localhost:8000/docs`
+1. Check backend is running: `curl http://localhost:8003/docs`
 2. Check CORS settings in `main.py`
 3. Clear browser cache and reload
 

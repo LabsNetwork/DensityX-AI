@@ -555,21 +555,30 @@
 
     function updateMap(crowd, density) {
       const points = (crowd && crowd.points) || [];
-      const heatData = points.map(p => [p.lat, p.lon, 0.7]);
+      const clusters = (density && density.clusters) || [];
+      
+      // Build heatmap from ALL crowd points with uniform weight
+      const heatData = points.map(p => [p.lat, p.lon, 1]);
+      const dynamicMax = Math.max(0.5, points.length / 250);
       
       if (heatLayer) map.removeLayer(heatLayer);
-      heatLayer = L.heatLayer(heatData, { 
-        radius: 30, 
-        blur: 20,
-        maxZoom: 1,
-        gradient: {0.0: '#0000ff', 0.33: '#00ff00', 0.66: '#ffff00', 1.0: '#ff0000'}
+      heatLayer = L.heatLayer(heatData, {
+        radius: 35,
+        blur: 25,
+        maxZoom: 17,
+        max: dynamicMax,
+        gradient: {
+          0.1: 'green',
+          0.3: 'yellow',
+          0.6: 'orange',
+          0.9: 'red'
+        }
       }).addTo(map);
 
       clearClusterMarkers();
-      const clusters = (density && density.clusters) || [];
       
       clusters.forEach(c => {
-        const isAlert = c.risk_flag === true;
+        const isAlert = c.size >= 80;
         const color = isAlert ? '#ff3366' : '#6496ff';
         const darkColor = isAlert ? '#c0392b' : '#4169e1';
         

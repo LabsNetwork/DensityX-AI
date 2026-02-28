@@ -4,6 +4,7 @@
 
 from pathlib import Path
 import sys
+import math
 
 # Add backend to path for imports
 BACKEND_DIR = Path(__file__).resolve().parent
@@ -31,17 +32,48 @@ if settings.USE_SIMULATION:
 
 
 def tick() -> None:
-    """One simulation step: generate current target count of points and store them."""
+    """One simulation step: generate and store the current set of crowd points.
+
+    The bounding box is defined by ``VENUE_RADIUS_KM`` (in kilometers),
+    which is converted to latitude/longitude degrees using the venue center's
+    latitude.  This allows intuitive, real-world sizing of the simulation area.
+    Increase the km value to expand geographic coverage without changing the
+    point count or cluster density (DBSCAN parameters remain fixed).
+
+    An ``AREA_MARGIN_METERS`` buffer is also added on top for breathing room.
+    """
     target = density_controller.get_target_count()
+
+    # convert venue radius from km to degrees
+    # approximate degree<->meter conversions at the venue latitude
+    meters_per_deg_lat = 111_320
+    meters_per_deg_lng = 111_320 * abs(
+        math.cos(math.radians(settings.VENUE_CENTER_LAT))
+    )
+    
+    # convert km to meters, then to degrees
+    radius_meters = settings.VENUE_RADIUS_KM * 1000
+    delta_lat = radius_meters / meters_per_deg_lat
+    delta_lng = radius_meters / meters_per_deg_lng
+    
+    # add margin (in meters, converted to degrees)
+    margin_deg_lat = settings.AREA_MARGIN_METERS / meters_per_deg_lat
+    margin_deg_lng = settings.AREA_MARGIN_METERS / meters_per_deg_lng
+    
+    # pass the combined deltas to generation
+    # (the generator will add extra jitter based on AREA_MARGIN_METERS)
     points = crowd_generator.generate_locations(
         settings.VENUE_CENTER_LAT,
         settings.VENUE_CENTER_LNG,
-        settings.DELTA_LAT,
-        settings.DELTA_LNG,
+        delta_lat,
+        delta_lng,
         target,
     )
     memory_store.set_locations(points)
-    print(f"[simulation] Generated {len(points)} points around Anna Nagar, Chennai (target={target})")
+    print(
+        f"[simulation] Generated {len(points)} points with radius {settings.VENUE_RADIUS_KM} km "
+        f"(target={target})"
+    )
 
 
 def density_tick() -> None:
@@ -154,4 +186,4 @@ if _onboarding_dir.exists():
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)
+    uvicorn.run(app, host="0.0.0.0", port=8003, reload=False)

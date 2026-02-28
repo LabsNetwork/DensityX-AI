@@ -17,7 +17,7 @@
                    │
         ┌──────────▼──────────┐
         │   FastAPI Backend   │
-        │   (Port 8000)       │
+        │   (Port 8003)       │
         └─────────┬───────────┘
                   │
         ┌─────────┴──────────────────────────┐
@@ -387,7 +387,7 @@ Production Setup
 │     Docker Container             │
 │  (python:3.10 base image)        │
 │                                 │
-│  ├─ FastAPI app (port 8000)     │
+│  ├─ FastAPI app (port 8003)     │
 │  ├─ Static files (/static)      │
 │  ├─ tickets.csv (volume)        │
 │  └─ Python venv                 │
@@ -411,7 +411,7 @@ services:
   backend:
     build: .
     ports:
-      - "8000:8000"
+      - "8003:8003"
     volumes:
       - ./backend/data:/app/backend/data  # tickets.csv
       - ./backend/static:/app/backend/static

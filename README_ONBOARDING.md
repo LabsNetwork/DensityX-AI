@@ -137,10 +137,10 @@ python scripts/generate_tickets.py --count 100
 # USE_SIMULATION = False
 
 # 3. Start backend
-cd backend && python -m uvicorn main:app --reload --port 8000
+cd backend && python -m uvicorn main:app --reload --port 8003
 
 # 4. Open in browser
-# http://localhost:8000/onboarding
+# http://localhost:8003/onboarding
 ```
 
 ### Test Check-In
@@ -154,7 +154,7 @@ Result: ✔ You're Checked In!
 
 ### Verify It Works
 ```bash
-curl http://localhost:8000/user/active-count
+curl http://localhost:8003/user/active-count
 # {"active_users": 1, "gps_enabled": 1}
 ```
 
@@ -277,7 +277,7 @@ VENUE_CENTER_LNG = 80.2101
 ### Development
 ```bash
 # No build required
-python -m uvicorn main:app --reload --port 8000
+python -m uvicorn main:app --reload --port 8003
 ```
 
 ### Production (Docker)
@@ -286,7 +286,7 @@ python -m uvicorn main:app --reload --port 8000
 docker-compose up -d
 
 # Verify
-curl http://localhost:8000/health
+curl http://localhost:8003/health
 ```
 
 ### No Migration Needed
@@ -363,12 +363,12 @@ Your event check-in system is **production-ready** and includes:
 
 ### Start Now
 ```
-http://localhost:8000/onboarding
+http://localhost:8003/onboarding
 ```
 
 ### Monitor Admin
 ```
-http://localhost:8000/dashboard
+http://localhost:8003/dashboard
 ```
 
 ---

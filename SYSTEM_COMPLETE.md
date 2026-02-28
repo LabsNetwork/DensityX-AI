@@ -369,7 +369,7 @@ The onboarding UI shows real-time stats:
 - [ ] Mount tickets.csv volume in docker-compose.yml
 - [ ] Set environment: `USE_SIMULATION=false`
 - [ ] Start containers: `docker-compose up -d`
-- [ ] Verify health: `curl http://localhost:8000/health`
+- [ ] Verify health: `curl http://localhost:8003/health`
 
 ### Post-Deployment
 
@@ -377,7 +377,7 @@ The onboarding UI shows real-time stats:
 - [ ] Test dashboard: Visit `/dashboard`
 - [ ] Monitor logs: Watch for clustering messages
 - [ ] Test alerts: Have 80+ users in one location
-- [ ] Verify API: `curl http://localhost:8000/user/active-count`
+- [ ] Verify API: `curl http://localhost:8003/user/active-count`
 
 ---
 
@@ -472,7 +472,7 @@ Your system is working correctly when:
 **"Status panel shows 0"**
 - Is backend running? Check terminal
 - Is USE_SIMULATION = false? Check settings.py
-- Test endpoint: `curl http://localhost:8000/user/active-count`
+- Test endpoint: `curl http://localhost:8003/user/active-count`
 
 **"No clusters showing"**
 - Need at least 12 users (min_samples) for a cluster

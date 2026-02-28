@@ -33,21 +33,21 @@ USE_SIMULATION = False
 ```bash
 cd backend
 source venv/bin/activate
-python -m uvicorn main:app --reload --port 8000
+python -m uvicorn main:app --reload --port 8003
 ```
 
 **Output should show:**
 ```
 [startup] REAL TICKET MODE: waiting for user registrations
 [startup] DBSCAN clustering every 10s
-Uvicorn running on http://0.0.0.0:8000
+Uvicorn running on http://0.0.0.0:8003
 ```
 
 ### 4. Open Event Check-In UI
 
 Visit in browser:
 ```
-http://localhost:8000/onboarding
+http://localhost:8003/onboarding
 ```
 
 ---
@@ -102,7 +102,7 @@ Updates automatically every 5 seconds.
 Open second terminal, same directory:
 
 ```bash
-curl http://localhost:8000/user/active-count
+curl http://localhost:8003/user/active-count
 ```
 
 **Response after check-in:**
@@ -116,7 +116,7 @@ curl http://localhost:8000/user/active-count
 ### 2. Check Clustering
 
 ```bash
-curl http://localhost:8000/density
+curl http://localhost:8003/density
 ```
 
 **Response (real ticket mode):**
@@ -170,10 +170,10 @@ In backend terminal, you'll see:
 
 | Purpose | URL |
 |---------|-----|
-| **Event Check-In** | `http://localhost:8000/onboarding` |
-| **Admin Dashboard** | `http://localhost:8000/dashboard` |
-| **API Docs** | `http://localhost:8000/docs` |
-| **Health Check** | `http://localhost:8000/health` |
+| **Event Check-In** | `http://localhost:8003/onboarding` |
+| **Admin Dashboard** | `http://localhost:8003/dashboard` |
+| **API Docs** | `http://localhost:8003/docs` |
+| **Health Check** | `http://localhost:8003/health` |
 
 ---
 
@@ -206,11 +206,11 @@ In backend terminal, you'll see:
 ### Add 5 More Check-Ins
 
 Open 5 browser tabs:
-1. Tab 1: `http://localhost:8000/onboarding` (Ticket: DX-XXXXX1)
-2. Tab 2: `http://localhost:8000/onboarding` (Ticket: DX-XXXXX2)
-3. Tab 3: `http://localhost:8000/onboarding` (Ticket: DX-XXXXX3)
-4. Tab 4: `http://localhost:8000/onboarding` (Ticket: DX-XXXXX4)
-5. Tab 5: `http://localhost:8000/onboarding` (Ticket: DX-XXXXX5)
+1. Tab 1: `http://localhost:8003/onboarding` (Ticket: DX-XXXXX1)
+2. Tab 2: `http://localhost:8003/onboarding` (Ticket: DX-XXXXX2)
+3. Tab 3: `http://localhost:8003/onboarding` (Ticket: DX-XXXXX3)
+4. Tab 4: `http://localhost:8003/onboarding` (Ticket: DX-XXXXX4)
+5. Tab 5: `http://localhost:8003/onboarding` (Ticket: DX-XXXXX5)
 
 Check backend logs:
 ```
@@ -306,6 +306,6 @@ Your DensityX event check-in system is live and ready to:
 5. Cluster attendees into crowd zones
 6. Alert on high-density areas
 
-**Start with**: `http://localhost:8000/onboarding`
+**Start with**: `http://localhost:8003/onboarding`
 
 Questions? See [UPGRADE_GUIDE.md](UPGRADE_GUIDE.md) or [ONBOARDING_UI.md](ONBOARDING_UI.md)

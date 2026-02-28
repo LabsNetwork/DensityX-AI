@@ -58,8 +58,8 @@ if _onboarding_dir.exists():
 ```
 
 **Access Points:**
-- `http://localhost:8000/onboarding` (primary)
-- `http://localhost:8000/static/onboarding/` (alternate)
+- `http://localhost:8003/onboarding` (primary)
+- `http://localhost:8003/static/onboarding/` (alternate)
 
 ---
 
@@ -109,7 +109,7 @@ All endpoints created in previous tasks—no new backend development needed.
 ```
 ┌─────────────────────────────────────────────────────┐
 │  1. VISIT CHECK-IN PAGE                             │
-│     http://localhost:8000/onboarding               │
+│     http://localhost:8003/onboarding               │
 │     ↓                                              │
 │  2. ENTER TICKET ID                                │
 │     Scan barcode / Type: DX-A9F3K2                 │
@@ -395,17 +395,17 @@ All required API endpoints already exist and are fully functional.
 ```bash
 cd backend
 source venv/bin/activate
-python -m uvicorn main:app --reload --port 8000
+python -m uvicorn main:app --reload --port 8003
 ```
 
 ### Open Onboarding
 ```
-http://localhost:8000/onboarding
+http://localhost:8003/onboarding
 ```
 
 ### View Dashboard (Admin)
 ```
-http://localhost:8000/dashboard
+http://localhost:8003/dashboard
 ```
 
 ---
@@ -440,6 +440,6 @@ You now have a **complete event check-in system** that:
 
 **All in one modern, mobile-friendly interface.**
 
-Start with: `http://localhost:8000/onboarding`
+Start with: `http://localhost:8003/onboarding`
 
 See [ONBOARDING_QUICKSTART.md](ONBOARDING_QUICKSTART.md) for 5-minute setup.

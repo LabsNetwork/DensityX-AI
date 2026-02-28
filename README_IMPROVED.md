@@ -74,13 +74,13 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Run backend
-python -m uvicorn main:app --reload --port 8000
+python -m uvicorn main:app --reload --port 8003
 ```
 
 **Access:**
-- Dashboard: http://localhost:8000/static/dashboard/index.html
-- API Docs: http://localhost:8000/docs
-- Health: http://localhost:8000/health
+- Dashboard: http://localhost:8003/static/dashboard/index.html
+- API Docs: http://localhost:8003/docs
+- Health: http://localhost:8003/health
 
 ### Docker Deployment
 
@@ -124,7 +124,7 @@ open http://localhost
 ```env
 # Server
 HOST=0.0.0.0
-PORT=8000
+PORT=8003
 
 # Venue (default: Anna Nagar, Chennai)
 VENUE_CENTER_LAT=13.0850
@@ -163,13 +163,29 @@ VENUE_CENTER_LAT=1.2867
 VENUE_CENTER_LNG=103.8616
 ```
 
+### Map & Display Options
+
+- The frontend uses **Leaflet.js** with free **OpenStreetMap** tiles – entirely open-source and unrestricted.  This combination is lightweight, highly customizable, and requires no API keys or usage quotas, making it ideal for demos and production alike.  Other free alternatives (MapLibre, Stamen, etc.) can be swapped in the same way because Leaflet is provider‑agnostic.
+- Point radius and cluster radius are adjustable in the React code (`frontend/src/App.jsx`) or via Vite environment variables (`VITE_POINT_RADIUS`, `VITE_CLUSTER_BASE_RADIUS`). The defaults revert to compact values (10 m for individual points, 12 m base for clusters) which match the original visualization; you can still override them with `VITE_POINT_RADIUS` or `VITE_CLUSTER_BASE_RADIUS` if you prefer larger markers.
+- **Venue coverage** is controlled via `VENUE_RADIUS_KM` in `config/settings.py` (in kilometers). Increase this value to expand the geographic coverage area without changing the point count or cluster density. The radius is automatically converted to latitude/longitude degrees based on the venue location. Examples:
+  - `1.5` km = ~1.5 km radius (tight, original Anna Nagar box)
+  - `4.0` km = ~4.0 km radius (medium-large venue; **default**)
+  - `5.0` km = ~5.0 km radius (large, Santosh Super Market to VR Mall range)
+  The `AREA_MARGIN_METERS` setting (default 200 m) further extends the coverage for breathing room.
+- **Heatmap Layer**: Color-coded crowd density (blue→green→yellow→red) with a fixed radius and default gradient; suitable for spotting hotspots at a glance.
+- Backend clustering accuracy is controlled via `config/settings.py`:
+  - `DBSCAN_EPS_METERS` sets the maximum distance between points for grouping (lower = finer clusters; default 25 m)
+  - `DBSCAN_MIN_SAMPLES` sets the minimum neighbours required to form a cluster (default 15)
+  - `CLUSTER_ALERT_THRESHOLD` is the number of people in a cluster required to trigger an alert (default 120)
+  These defaults are tuned for a larger, sparser venue; adjust any of them to suit your location scale.
+
 ## 📡 API Endpoints
 
 ### GET /crowd/locations
 Returns current simulated crowd points and pre-computed clusters.
 
 ```bash
-curl http://localhost:8000/crowd/locations
+curl http://localhost:8003/crowd/locations
 ```
 
 Response:
@@ -188,7 +204,7 @@ Response:
 Returns latest DBSCAN clustering analysis results.
 
 ```bash
-curl http://localhost:8000/density
+curl http://localhost:8003/density
 ```
 
 Response:
@@ -217,24 +233,28 @@ Response:
 ```
 
 ### POST /crowd/surge
-Trigger a temporary surge in crowd size (testing feature).
+Trigger a temporary surge in crowd size (testing feature) or clear it.
 
 ```bash
-curl -X POST http://localhost:8000/crowd/surge?extra=500
+# add 500 simulated attendees
+curl -X POST http://localhost:8003/crowd/surge?extra=500
+
+# restore normal crowd (clears previous surge)
+curl -X POST http://localhost:8003/crowd/surge?extra=0
 ```
 
 ### GET /health
 Health check endpoint for monitoring systems.
 
 ```bash
-curl http://localhost:8000/health
+curl http://localhost:8003/health
 ```
 
 ### GET /info
 Get API information and available endpoints.
 
 ```bash
-curl http://localhost:8000/info
+curl http://localhost:8003/info
 ```
 
 ## 📊 Architecture
@@ -303,9 +323,9 @@ curl http://localhost:8000/info
 
 ```bash
 # Test all endpoints
-curl http://localhost:8000/health
-curl http://localhost:8000/density
-curl http://localhost:8000/crowd/locations
+curl http://localhost:8003/health
+curl http://localhost:8003/density
+curl http://localhost:8003/crowd/locations
 
 # Monitor logs
 docker-compose logs -f backend
@@ -315,7 +335,7 @@ docker-compose logs -f backend
 
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Complete deployment guide
 - **[Setup.md](./Setup.md)** - Development setup instructions
-- **API Docs**: http://localhost:8000/docs (Swagger UI)
+- **API Docs**: http://localhost:8003/docs (Swagger UI)
 
 ## 🔒 Security
 
@@ -336,10 +356,10 @@ docker-compose logs -f backend
 ### Dashboard not loading
 ```bash
 # Check backend health
-curl http://localhost:8000/health
+curl http://localhost:8003/health
 
 # Check API endpoint
-curl http://localhost:8000/density
+curl http://localhost:8003/density
 
 # View console logs
 # Open browser DevTools → Console tab

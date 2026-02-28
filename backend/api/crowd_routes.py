@@ -43,6 +43,16 @@ def get_crowd_locations():
 
 @router.post("/surge")
 def trigger_surge(extra: int = settings.SURGE_EXTRA):
-    """Trigger a crowd surge: add `extra` to the target attendee count."""
+    """Trigger a crowd surge or reset it.
+
+    If `extra` is positive we add that many attendees to the simulated
+    base count.  When `extra` is zero we clear any previously applied surge
+    so the crowd returns to normal size.
+    """
+    if extra <= 0:
+        # Treat zero or negative as "clear surge" command
+        density_controller.clear_surge()
+        return {"ok": True, "message": "Surge cleared, crowd back to normal"}
+
     density_controller.trigger_surge(extra)
     return {"ok": True, "message": f"Surge triggered: +{extra} attendees"}

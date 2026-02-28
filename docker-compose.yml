@@ -6,10 +6,10 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "8003:8003"
     environment:
       HOST: 0.0.0.0
-      PORT: 8000
+      PORT: 8003
       RELOAD: "False"
       DEBUG: "False"
       BASE_CROWD_SIZE: 200
@@ -19,7 +19,7 @@ services:
       LOG_LEVEL: INFO
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/density"]
+      test: ["CMD", "curl", "-f", "http://localhost:8003/density"]
       interval: 30s
       timeout: 10s
       retries: 3

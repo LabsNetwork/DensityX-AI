@@ -29,12 +29,31 @@ class TicketValidator:
         Returns:
             Set of valid ticket IDs
         """
-        if not self.csv_path.exists():
+        # Try multiple candidate paths so validation works regardless of
+        # how the server is started (project root vs backend dir).
+        candidates = [self.csv_path]
+
+        # Path relative to this module's parent (backend/services -> backend)
+        module_parent = Path(__file__).resolve().parent.parent
+        candidates.append(module_parent / "data" / "tickets.csv")
+        # Tickets directly under backend (some repos keep tickets.csv here)
+        candidates.append(module_parent / "tickets.csv")
+        # Path relative to current working directory
+        candidates.append(Path.cwd() / "backend" / "data" / "tickets.csv")
+        candidates.append(Path.cwd() / "backend" / "tickets.csv")
+        candidates.append(Path.cwd() / "data" / "tickets.csv")
+
+        found_path = None
+        for p in candidates:
+            if p and p.exists():
+                found_path = p
+                break
+        if not found_path:
             return set()
-        
+
         tickets = set()
         try:
-            with open(self.csv_path, 'r') as f:
+            with open(found_path, 'r') as f:
                 reader = csv.DictReader(f)
                 for row in reader:
                     if row and 'ticket_id' in row:
@@ -42,8 +61,8 @@ class TicketValidator:
                         if ticket_id:
                             tickets.add(ticket_id)
         except (IOError, ValueError) as e:
-            print(f"[ticket_validator] Warning: Error reading {self.csv_path}: {e}")
-        
+            print(f"[ticket_validator] Warning: Error reading {found_path}: {e}")
+
         return tickets
     
     def is_valid(self, ticket_id: str) -> bool:

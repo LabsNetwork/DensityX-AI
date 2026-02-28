@@ -17,7 +17,7 @@
 ### Primary Deliverable
 ✅ **Modern Event Onboarding UI**
 - File: `backend/static/onboarding/index.html` (884 lines)
-- Location: Accessible at `http://localhost:8000/onboarding`
+- Location: Accessible at `http://localhost:8003/onboarding`
 - Status: Production ready, fully tested
 
 ### Implementation Details
@@ -230,7 +230,7 @@ backend/static/onboarding/index.html
 backend/main.py
 
 # Access at
-http://localhost:8000/onboarding
+http://localhost:8003/onboarding
 ```
 
 ### Docker Compatible
@@ -423,8 +423,8 @@ backend/main.py                               (Added route mounting)
 ### Development
 ```bash
 cd backend
-python -m uvicorn main:app --reload --port 8000
-# Visit: http://localhost:8000/onboarding
+python -m uvicorn main:app --reload --port 8003
+# Visit: http://localhost:8003/onboarding
 ```
 
 ### Production
@@ -495,9 +495,9 @@ You now have a **complete, production-ready event check-in system** that:
 
 ## 🔗 Quick Links
 
-- **Live Check-In**: `http://localhost:8000/onboarding`
-- **Admin Dashboard**: `http://localhost:8000/dashboard`
-- **API Docs**: `http://localhost:8000/docs`
+- **Live Check-In**: `http://localhost:8003/onboarding`
+- **Admin Dashboard**: `http://localhost:8003/dashboard`
+- **API Docs**: `http://localhost:8003/docs`
 - **Setup Guide**: [ONBOARDING_QUICKSTART.md](ONBOARDING_QUICKSTART.md)
 - **Full Docs**: [INDEX.md](INDEX.md)
 
