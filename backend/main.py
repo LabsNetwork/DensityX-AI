@@ -15,6 +15,14 @@ import uvicorn
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 from starlette.staticfiles import StaticFiles
 
 from api.crowd_routes import router as crowd_router
@@ -187,3 +195,6 @@ if _onboarding_dir.exists():
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8003, reload=False)
+@app.get("/")
+def health():
+    return {"status": "ok"}

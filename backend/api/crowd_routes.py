@@ -1,7 +1,7 @@
 # api/crowd_routes.py
 # Endpoints only: fetch crowd locations and trigger surge.
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from config import settings
 from simulation import density_controller
@@ -12,17 +12,39 @@ router = APIRouter(prefix="/crowd", tags=["crowd"])
 
 
 @router.get("/locations")
-def get_crowd_locations():
-    """Return current simulated crowd points (lat, lng)."""
+def get_crowd_locations(
+    alert_threshold: int = Query(None),
+    min_cluster: int = Query(None),
+    eps: float = Query(None),
+):
+    """Return current simulated crowd points (lat, lng) with live clustering parameters.
+    
+    Query Parameters:
+    - alert_threshold: Risk threshold for cluster size (default: 80)
+    - min_cluster: Minimum samples for DBSCAN clustering (default: 15)
+    - eps: DBSCAN eps in kilometers (default: 0.025 km = 25m)
+    """
     locations = memory_store.get_locations()
     points = [{"lat": loc.latitude, "lon": loc.longitude} for loc in locations]
+
+    # Fallback to settings defaults if parameters not provided
+    eps_km = eps if eps is not None else settings.DBSCAN_EPS_METERS / 1000
+    min_samples = min_cluster if min_cluster is not None else settings.DBSCAN_MIN_SAMPLES
+    alert_thresh = alert_threshold if alert_threshold is not None else settings.CLUSTER_ALERT_THRESHOLD
+    
+    # Debug: Print received parameters
+    print(f"[CLUSTERING] Received params: min_cluster={min_cluster}, eps={eps}, alert_threshold={alert_threshold}")
+    print(f"[CLUSTERING] Using values: min_samples={min_samples}, eps_km={eps_km}, alert_thresh={alert_thresh}")
+    
+    # Convert km back to meters for run_dbscan
+    eps_meters = eps_km * 1000
 
     # Compute clusters on the fly for the response
     db_result = run_dbscan(
         points,
-        eps_meters=settings.DBSCAN_EPS_METERS,
-        min_samples=settings.DBSCAN_MIN_SAMPLES,
-        alert_threshold=settings.CLUSTER_ALERT_THRESHOLD,
+        eps_meters=eps_meters,
+        min_samples=min_samples,
+        alert_threshold=alert_thresh,
     )
     clusters = [
         {

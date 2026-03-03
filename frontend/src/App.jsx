@@ -8,9 +8,12 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "./App.css";
+import { ControlPanel } from "./ControlPanel";
+import "./ControlPanel.css";
 
-const API_URL = "http://127.0.0.1:8003/crowd/locations";
-const SURGE_URL = "http://127.0.0.1:8003/crowd/surge";
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
+const API_URL = `${API_BASE}/crowd/locations`;
+const SURGE_URL = `${API_BASE}/crowd/surge`;
 
 // visual tuning
 // default sizes: small dots and modest clusters for clarity
@@ -20,14 +23,25 @@ const CLUSTER_BASE_RADIUS = parseInt(import.meta.env.VITE_CLUSTER_BASE_RADIUS ||
 function App() {
   const [points, setPoints] = useState([]);
   const [clusters, setClusters] = useState([]);
+  const [alertThreshold, setAlertThreshold] = useState(80);
+  const [minClusterSize, setMinClusterSize] = useState(15);
+  const [eps, setEps] = useState(25);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(API_URL);
+        const params = new URLSearchParams({
+          alert_threshold: alertThreshold,
+          min_cluster: minClusterSize,
+          eps: eps / 1000, // Convert meters to km
+        });
+        const url = `${API_URL}?${params.toString()}`;
+        console.log("[FRONTEND] Fetching with params - min_cluster:", minClusterSize, "eps:", eps / 1000, "alert:", alertThreshold);
+        console.log("[FRONTEND] URL:", url);
+        const res = await fetch(url);
         const data = await res.json();
 
-        console.log("Clusters received:", data.clusters);
+        console.log("[FRONTEND] Clusters received:", data.clusters);
 
         setPoints(Array.isArray(data.points) ? data.points : []);
         setClusters(Array.isArray(data.clusters) ? data.clusters : []);
@@ -39,7 +53,7 @@ function App() {
     fetchData();
     const interval = setInterval(fetchData, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [alertThreshold, minClusterSize, eps]);
 
   const triggerSurge = async (extra) => {
     try {
@@ -51,7 +65,7 @@ function App() {
     }
   };
 
-  const riskyClusters = clusters.filter((c) => c.size >= 80);
+  const riskyClusters = clusters.filter((c) => c.cluster_size >= alertThreshold);
 
   const center =
     points.length > 0
@@ -73,6 +87,16 @@ function App() {
         {/* increase crowd by 300 when surge button is pressed */}
         <button onClick={() => triggerSurge(300)}>Trigger Surge</button>
       </div>
+
+      {/* CONTROL PANEL */}
+      <ControlPanel
+        alertThreshold={alertThreshold}
+        setAlertThreshold={setAlertThreshold}
+        minClusterSize={minClusterSize}
+        setMinClusterSize={setMinClusterSize}
+        eps={eps}
+        setEps={setEps}
+      />
 
       {/* LEGEND */}
       <div className="legend">
@@ -115,10 +139,10 @@ function App() {
                 center={[c.centroid.lat, c.centroid.lon]}
                 radius={CLUSTER_BASE_RADIUS + c.cluster_size}
                 pathOptions={{
-                  color: c.cluster_size >= 80 ? "red" : "orange",
+                  color: c.cluster_size >= alertThreshold ? "red" : "orange",
                   fillOpacity: 0.25,
                 }}
-                className={c.cluster_size >= 80 ? "cluster-pulse" : ""}
+                className={c.cluster_size >= alertThreshold ? "cluster-pulse" : ""}
               />
 
               {/* CLUSTER SIZE LABEL */}
