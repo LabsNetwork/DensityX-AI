@@ -49,6 +49,43 @@ export function Dashboard() {
   const handleLoginSuccess = (ticketId) => {
     setIsLoggedIn(true);
     setLoading(true);
+    
+    // Request GPS permission and start tracking
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            // Send real GPS location to backend
+            await apiClient.updateLocation(ticketId, latitude, longitude, true);
+          } catch (err) {
+            // Location tracking error (non-critical)
+          }
+        },
+        (error) => {
+          // GPS permission denied or error (silent fail)
+        }
+      );
+      
+      // Watch for continuous GPS updates every 10 seconds
+      const watchId = navigator.geolocation.watchPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            await apiClient.updateLocation(ticketId, latitude, longitude, true);
+          } catch (err) {
+            // Location update failed (silent)
+          }
+        },
+        (error) => {
+          // Watch error (silent)
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 10000 }
+      );
+      
+      // Cleanup watch on component unmount
+      return () => navigator.geolocation.clearWatch(watchId);
+    }
   };
 
   const handleLogout = () => {
