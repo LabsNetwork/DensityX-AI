@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 
 const API_BASE = "https://densityx-ai.onrender.com";
 
@@ -79,6 +81,114 @@ function AdminDashboard() {
         </div>
         <div style={{ fontSize: "1rem", color: "#a0aec0" }}>
           Real-time Crowd Density Monitoring
+        </div>
+      </div>
+
+      {/* Live Map */}
+      <div
+        style={{
+          marginBottom: "2rem",
+          borderRadius: "12px",
+          overflow: "hidden",
+          border: "1px solid rgba(0, 212, 255, 0.25)",
+          boxShadow: "0 18px 45px rgba(15,23,42,0.9)",
+        }}
+      >
+        <div
+          style={{
+            padding: "0.75rem 1.25rem",
+            background:
+              "linear-gradient(90deg, rgba(15,23,42,0.96) 0%, rgba(30,64,175,0.95) 100%)",
+            borderBottom: "1px solid rgba(56,189,248,0.45)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            fontSize: "0.9rem",
+          }}
+        >
+          <span style={{ fontWeight: 600 }}>Live Crowd Map</span>
+          <span style={{ color: "#c7d2fe" }}>
+            Points: {points.length} • Clusters: {clusters.length}
+          </span>
+        </div>
+        <div style={{ height: "420px", background: "#020617" }}>
+          <MapContainer
+            center={[13.085, 80.2101]}
+            zoom={14}
+            style={{ height: "100%", width: "100%" }}
+          >
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; OpenStreetMap contributors'
+            />
+
+            {/* User points */}
+            {points.map((p, idx) => (
+              <CircleMarker
+                key={`p-${idx}`}
+                center={[p.lat, p.lon]}
+                radius={4}
+                color="#38bdf8"
+                fillColor="#0ea5e9"
+                fillOpacity={0.75}
+                weight={1}
+              >
+                <Popup>
+                  <div>
+                    <div>
+                      <strong>User</strong>
+                    </div>
+                    <div>
+                      ({p.lat?.toFixed(4)}, {p.lon?.toFixed(4)})
+                    </div>
+                  </div>
+                </Popup>
+              </CircleMarker>
+            ))}
+
+            {/* Cluster centroids */}
+            {clusters.map((cluster, idx) => (
+              <CircleMarker
+                key={`c-${idx}`}
+                center={[
+                  cluster.centroid?.lat ??
+                    cluster.centroid_lat ??
+                    cluster.lat,
+                  cluster.centroid?.lon ??
+                    cluster.centroid_lon ??
+                    cluster.lon,
+                ]}
+                radius={cluster.cluster_size ? 8 + cluster.cluster_size / 10 : 10}
+                color={cluster.risk_flag ? "#f97316" : "#22c55e"}
+                fillColor={cluster.risk_flag ? "#ea580c" : "#4ade80"}
+                fillOpacity={0.9}
+                weight={3}
+              >
+                <Popup>
+                  <div>
+                    <div>
+                      <strong>Cluster {idx + 1}</strong>
+                    </div>
+                    <div>Size: {cluster.cluster_size} people</div>
+                    <div>
+                      Center:{" "}
+                      {cluster.centroid?.lat?.toFixed(4) ||
+                        cluster.centroid_lat?.toFixed(4) ||
+                        "N/A"}
+                      ,{" "}
+                      {cluster.centroid?.lon?.toFixed(4) ||
+                        cluster.centroid_lon?.toFixed(4) ||
+                        "N/A"}
+                    </div>
+                    <div>
+                      Risk:{" "}
+                      {cluster.risk_flag ? "🔴 HIGH RISK" : "🟢 NORMAL"}
+                    </div>
+                  </div>
+                </Popup>
+              </CircleMarker>
+            ))}
+          </MapContainer>
         </div>
       </div>
 
