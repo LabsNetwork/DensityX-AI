@@ -1,0 +1,39 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run DensityX-AI Backend",
+      "type": "python",
+      "request": "launch",
+      "module": "main",
+      "cwd": "${workspaceFolder}/backend",
+      "python": "${workspaceFolder}/backend/venv/bin/python",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "env": {
+        "PYTHONUNBUFFERED": "1"
+      },
+      "preLaunchTask": "Install Backend Dependencies"
+    },
+    {
+      "name": "Run Frontend Dev Server",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/frontend/node_modules/.bin/vite",
+      "cwd": "${workspaceFolder}/frontend",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "preLaunchTask": "Install Frontend Dependencies"
+    },
+    {
+      "name": "Run Both Backend & Frontend",
+      "type": "compound",
+      "configurations": ["Run DensityX-AI Backend", "Run Frontend Dev Server"],
+      "presentation": {
+        "group": "5_executors",
+        "order": 1,
+        "hidden": false
+      }
+    }
+  ]
+}

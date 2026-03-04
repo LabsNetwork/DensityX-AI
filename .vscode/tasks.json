@@ -1,0 +1,67 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Install Backend Dependencies",
+      "type": "shell",
+      "command": "${workspaceFolder}/backend/venv/bin/pip",
+      "args": ["install", "-q", "-r", "${workspaceFolder}/backend/requirements.txt"],
+      "problemMatcher": [],
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "isBackground": false
+    },
+    {
+      "label": "Install Frontend Dependencies",
+      "type": "shell",
+      "command": "npm",
+      "args": ["install"],
+      "cwd": "${workspaceFolder}/frontend",
+      "problemMatcher": [],
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "isBackground": false
+    },
+    {
+      "label": "Start Backend Server",
+      "type": "shell",
+      "command": "bash",
+      "args": ["${workspaceFolder}/backend/start_server.sh"],
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Start Frontend Dev Server",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "dev"],
+      "cwd": "${workspaceFolder}/frontend",
+      "problemMatcher": [],
+      "isBackground": true
+    },
+    {
+      "label": "Run Tests",
+      "type": "shell",
+      "command": "${workspaceFolder}/backend/venv/bin/python",
+      "args": ["-m", "pytest", "${workspaceFolder}/backend/tests"],
+      "cwd": "${workspaceFolder}/backend",
+      "problemMatcher": [],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Check Server Health",
+      "type": "shell",
+      "command": "curl",
+      "args": ["-s", "http://127.0.0.1:8003/health"],
+      "problemMatcher": []
+    }
+  ]
+}

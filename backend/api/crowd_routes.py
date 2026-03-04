@@ -1,111 +1,65 @@
 # api/crowd_routes.py
-# 🎤 Event-aware endpoints for crowd locations and surge management.
+# Endpoints only: fetch crowd locations and trigger surge.
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from config import settings
 from simulation import density_controller
 from density import run_dbscan
-from density.cluster_reshaper import reshape_clusters_for_event
 from storage import memory_store
 
 router = APIRouter(prefix="/crowd", tags=["crowd"])
 
 
 @router.get("/locations")
-def get_crowd_locations():
-    """🎤 EVENT-AWARE CLUSTER RESPONSE
+def get_crowd_locations(
+    alert_threshold: int = Query(None),
+    min_cluster: int = Query(None),
+    eps: float = Query(None),
+):
+    """Return current simulated crowd points (lat, lng) with live clustering parameters.
     
-    Return current crowd points and event-aware clusters.
-    
-    Behavior:
-    - Verified-only: Only CSV-verified users with GPS
-    - Event-aware: Dynamic thresholds based on attendee count
-    - Risk levels: Safe → Caution → Alert → Critical
-    - Visual properties: Dynamic sizing, color coding
-    
-    In simulation mode: Returns simulated crowd with event context.
-    In real mode: Returns ONLY verified user locations.
-    
-    Returns:
-        {
-            "count": number of people,
-            "points": [{"lat": ..., "lon": ...}],
-            "clusters": [
-                {
-                    "id": cluster_id,
-                    "size": people_count,
-                    "centroid": {"lat": ..., "lon": ...},
-                    "risk_level": "safe|caution|alert|critical",
-                    "color": "#RRGGBB",
-                    "visual_radius_meters": 25.0,
-                    "stability": 0.0-1.0,
-                    "threshold": adaptive_threshold
-                }
-            ],
-            "adaptive_threshold": dynamic_alert_threshold,
-            "verified_attendees": total_verified_count,
-            "venue_radius_km": settings.VENUE_RADIUS_KM,
-            "success": true
-        }
+    Query Parameters:
+    - alert_threshold: Risk threshold for cluster size (default: 80)
+    - min_cluster: Minimum samples for DBSCAN clustering (default: 15)
+    - eps: DBSCAN eps in kilometers (default: 0.025 km = 25m)
     """
-    if settings.USE_SIMULATION:
-        # Simulation mode: return simulated crowd points
-        locations = memory_store.get_locations()
-        points = [{"lat": loc.latitude, "lon": loc.longitude} for loc in locations]
-        total_attendees = len(points)
-    else:
-        # 🔐 REAL MODE: Return ONLY verified users with GPS enabled
-        users = memory_store.get_verified_gps_users()  # ✅ Verified-only filter
-        points = [{"lat": u.latitude, "lon": u.longitude} for u in users]
-        total_attendees = len(users)
+    locations = memory_store.get_locations()
+    points = [{"lat": loc.latitude, "lon": loc.longitude} for loc in locations]
 
-    # Compute raw DBSCAN clusters
+    # Fallback to settings defaults if parameters not provided
+    eps_km = eps if eps is not None else settings.DBSCAN_EPS_METERS / 1000
+    min_samples = min_cluster if min_cluster is not None else settings.DBSCAN_MIN_SAMPLES
+    alert_thresh = alert_threshold if alert_threshold is not None else settings.CLUSTER_ALERT_THRESHOLD
+    
+    # Debug: Print received parameters
+    print(f"[CLUSTERING] Received params: min_cluster={min_cluster}, eps={eps}, alert_threshold={alert_threshold}")
+    print(f"[CLUSTERING] Using values: min_samples={min_samples}, eps_km={eps_km}, alert_thresh={alert_thresh}")
+    
+    # Convert km back to meters for run_dbscan
+    eps_meters = eps_km * 1000
+
+    # Compute clusters on the fly for the response
     db_result = run_dbscan(
         points,
-        eps_meters=settings.DBSCAN_EPS_METERS,
-        min_samples=settings.DBSCAN_MIN_SAMPLES,
-        alert_threshold=settings.CLUSTER_ALERT_THRESHOLD,
+        eps_meters=eps_meters,
+        min_samples=min_samples,
+        alert_threshold=alert_thresh,
     )
-    
-    # 🎤 Reshape with event awareness
-    reshaped = reshape_clusters_for_event(
-        db_result,
-        total_verified_attendees=total_attendees,
-        event_capacity=None,  # Can be extended from event config
-        spatial_spread_km=settings.VENUE_RADIUS_KM,
-    )
-    
-    # Build response with event context
     clusters = [
         {
-            "id": c["id"],
-            "cluster_id": c["id"],  # Backward compatibility
-            "size": c["size"],
-            "cluster_size": c["size"],  # Backward compatibility
-            "centroid": {
-                "lat": c["centroid_lat"],
-                "lon": c["centroid_lon"]
-            },
-            "risk_level": c.get("risk_level", "safe"),
-            "risk_flag": c.get("risk_flag", False),  # Backward compatibility
-            "color": c.get("color", "#00AA00"),
-            "visual_radius_meters": c.get("visual_radius_meters", 25.0),
-            "stability": c.get("stability", 0.0),
-            "threshold": c.get("threshold", 80),
+            "cluster_id": c["id"],
+            "cluster_size": c["size"],
+            "centroid": {"lat": c["centroid_lat"], "lon": c["centroid_lon"]},
+            "risk_flag": c["risk_flag"],
         }
-        for c in reshaped.get("clusters", [])
+        for c in db_result.get("clusters", [])
     ]
 
     return {
-        "count": len(points),
+        "count": len(locations),
         "points": points,
         "clusters": clusters,
-        "adaptive_threshold": reshaped.get("adaptive_threshold", 80),
-        "alert_clusters": len(reshaped.get("alert_clusters", [])),
-        "verified_attendees": total_attendees,
-        "venue_radius_km": settings.VENUE_RADIUS_KM,
-        "success": True,
     }
 
 

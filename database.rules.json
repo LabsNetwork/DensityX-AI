@@ -1,0 +1,26 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "$uid === auth.uid",
+        ".write": "$uid === auth.uid",
+        "locations": {
+          ".indexOn": ["verified", "timestamp", "lat", "lng"]
+        }
+      }
+    },
+    "clusters": {
+      ".read": true,
+      ".write": false,
+      ".indexOn": ["event_type", "verified_only"]
+    },
+    "events": {
+      ".read": true,
+      ".write": false
+    },
+    "$other": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}
