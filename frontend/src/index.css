@@ -19,47 +19,24 @@ body {
   background: #f5f5f5;
 }
 
-/* CRITICAL: Ensure Leaflet map has full height */
+/* Ensure Leaflet container has explicit height */
 .leaflet-container {
-  height: 100% !important;
-  width: 100% !important;
-  font-family: inherit;
+  height: 100vh !important;
+  width: 100vw !important;
 }
 
 button {
   font-family: inherit;
   font-size: 1rem;
+  cursor: pointer;
   transition: all 0.3s ease;
 }
 
 button:hover {
   opacity: 0.9;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 button:active {
   transform: translateY(0);
-}
-
-.leaflet-container {
-  font-family: inherit;
-}
-
-/* Hide scrollbars but keep scrollability */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #555;
 }

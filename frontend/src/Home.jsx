@@ -1,262 +1,200 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { MapContainer, TileLayer, Circle, CircleMarker, Popup } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
+import React, { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 
-// GLOBAL PRODUCTION ENDPOINT (NO LOCALHOST)
+// GLOBAL PRODUCTION ENDPOINT
 const API_BASE = "https://densityx-ai.onrender.com";
-const VENUE_CENTER = [13.085, 80.2101];
-const REFRESH_MS = 5000;
 
-/**
- * Production-Ready Home Component with Fail-Safe Architecture
- * - Always renders content (no white screen)
- * - Error handling with fallback UI
- * - Real-time data from production backend
- * - Responsive layout with proper styling
- */
-export default function Home() {
-  const [crowd, setCrowd] = useState({ points: [], clusters: [] });
-  const [density, setDensity] = useState({ clusters: [] });
+function Home() {
+  const [data, setData] = useState({ points: [], clusters: [] });
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [autoRefresh, setAutoRefresh] = useState(true);
 
-  const clusters = density.clusters || [];
-  const highRiskClusters = clusters.filter((c) => c.risk_flag);
-
-  // Fetch data from production backend
-  const fetchData = useCallback(async () => {
+  const fetchData = async () => {
     try {
-      console.log("📡 Fetching crowd data from:", `${API_BASE}/crowd/locations`);
-      const crowdRes = await fetch(`${API_BASE}/crowd/locations`, { timeout: 10000 });
-      if (!crowdRes.ok) throw new Error(`HTTP ${crowdRes.status}`);
-      const crowdData = await crowdRes.json();
-
-      console.log("📡 Fetching density data from:", `${API_BASE}/density`);
-      const densityRes = await fetch(`${API_BASE}/density`, { timeout: 10000 });
-      if (!densityRes.ok) throw new Error(`HTTP ${densityRes.status}`);
-      const densityData = await densityRes.json();
-
-      console.log("✅ Data loaded:", { points: crowdData.count, clusters: densityData.clusters?.length });
-
-      setCrowd(crowdData);
-      setDensity(densityData);
-      setError("");
+      console.log("📡 Fetching from:", `${API_BASE}/crowd/locations`);
+      const response = await fetch(`${API_BASE}/crowd/locations`, { timeout: 10000 });
+      if (!response.ok) throw new Error(`API returned ${response.status}`);
+      const result = await response.json();
+      console.log("✅ Data received:", result);
+      setData(result);
+      setError(null);
+      setLoading(false);
     } catch (err) {
-      console.error("❌ API Error:", err);
-      setError(`Backend connection failed: ${err.message}`);
-    } finally {
+      console.error("❌ Fetch error:", err);
+      setError(err.message);
       setLoading(false);
     }
-  }, []);
+  };
 
-  // Initial load
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+    const interval = setInterval(fetchData, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
-  // Auto-refresh interval
-  useEffect(() => {
-    if (!autoRefresh) return;
-    const intervalId = setInterval(fetchData, REFRESH_MS);
-    return () => clearInterval(intervalId);
-  }, [autoRefresh, fetchData]);
-
-  // FAIL-SAFE: Always render something
-  if (error && loading) {
+  // ERROR STATE
+  if (error) {
     return (
       <div style={{
-        height: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        color: "#fff",
-        textAlign: "center",
-        padding: "2rem",
+        height: '100vh',
+        width: '100vw',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white',
+        textAlign: 'center',
+        flexDirection: 'column',
+        padding: '20px'
       }}>
-        <div>
-          <h1>⚠️ Connection Error</h1>
-          <p>{error}</p>
-          <p style={{ fontSize: "0.9rem", opacity: 0.8 }}>Trying to connect to backend...</p>
-          <button
-            onClick={() => window.location.reload()}
-            style={{
-              marginTop: "1rem",
-              padding: "0.75rem 1.5rem",
-              background: "#fff",
-              color: "#667eea",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontWeight: "bold",
-            }}
-          >
-            Retry Now
-          </button>
-        </div>
+        <h1 style={{ fontSize: '3rem', margin: '0 0 1rem 0' }}>⚠️ Connection Issue</h1>
+        <p style={{ fontSize: '1.1rem', margin: '0.5rem 0' }}>Unable to reach the backend server</p>
+        <p style={{ color: '#ddd', margin: '0.5rem 0' }}>{error}</p>
+        <p style={{ color: '#aaa', margin: '1rem 0' }}>Check: <a href={API_BASE} target="_blank" rel="noopener noreferrer" style={{ color: '#00d4ff', textDecoration: 'underline' }}>{API_BASE}</a></p>
+        <button
+          onClick={() => window.location.reload()}
+          style={{
+            marginTop: '2rem',
+            padding: '12px 30px',
+            fontSize: '1rem',
+            background: '#00d4ff',
+            color: '#000',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
+        >
+          🔄 Retry
+        </button>
       </div>
     );
   }
 
-  return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "#f5f5f5" }}>
-      {/* Header */}
+  // LOADING STATE
+  if (loading) {
+    return (
       <div style={{
-        padding: "1rem 1.5rem",
-        background: "linear-gradient(90deg, #333 0%, #1a1a1a 100%)",
-        color: "#fff",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+        height: '100vh',
+        width: '100vw',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white',
+        textAlign: 'center',
+        flexDirection: 'column'
       }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <h1 style={{ margin: "0.5rem 0", fontSize: "1.5rem" }}>🗺️ DensityX Live Monitor</h1>
-            <div style={{ fontSize: "0.85rem", color: error ? "#ff6b6b" : "#4ade80", fontWeight: "bold" }}>
-              {error ? `⚠️ ${error}` : "🟢 Connected to Backend"}
-            </div>
-          </div>
-          <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: "0.9rem" }}>Active Points: <strong>{crowd.points?.length || 0}</strong></div>
-            <div style={{ fontSize: "0.9rem" }}>Clusters: <strong>{clusters.length}</strong></div>
-          </div>
+        <h1 style={{ margin: '0 0 1rem 0' }}>⏳ Loading...</h1>
+        <p>Connecting to: {API_BASE}</p>
+      </div>
+    );
+  }
+
+  // SUCCESS STATE
+  return (
+    <div style={{ height: '100vh', width: '100vw', position: 'relative' }}>
+      {/* Header Overlay */}
+      <div style={{
+        position: 'absolute',
+        top: '10px',
+        left: '10px',
+        zIndex: 1000,
+        background: 'rgba(0, 0, 0, 0.8)',
+        color: 'white',
+        padding: '15px',
+        borderRadius: '8px',
+        backdropFilter: 'blur(10px)'
+      }}>
+        <h2 style={{ margin: '0 0 10px 0', fontSize: '1.2rem' }}>🗺️ DensityX Live Monitor</h2>
+        <div style={{ fontSize: '0.9rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          <div>👥 Total Points: <strong>{data.points?.length || 0}</strong></div>
+          <div>📍 Active Clusters: <strong>{data.clusters?.length || 0}</strong></div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        {loading && !error ? (
-          // Loading State
-          <div style={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexDirection: "column",
-          }}>
-            <div style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>⏳</div>
-            <p>Loading map and real-time data...</p>
-            <p style={{ fontSize: "0.85rem", color: "#666" }}>Connecting to: {API_BASE}</p>
-          </div>
-        ) : (
-          // Map Container (Full Height)
-          <div style={{ flex: 1, position: "relative" }}>
-            <MapContainer
-              center={VENUE_CENTER}
-              zoom={14}
-              style={{ height: "100%", width: "100%" }}
-            >
-              <TileLayer
-                attribution="&copy; OpenStreetMap contributors"
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
+      {/* Map Container */}
+      <MapContainer
+        center={[13.085, 80.2101]}
+        zoom={14}
+        style={{ height: '100%', width: '100%' }}
+      >
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        />
 
-              {/* Crowd Points */}
-              {(crowd.points || []).map((point, idx) => (
-                <Circle
-                  key={`point-${idx}`}
-                  center={[point.lat, point.lon]}
-                  radius={20}
-                  color="#1e40af"
-                  fillColor="#3b82f6"
-                  fillOpacity={0.6}
-                  weight={2}
-                />
-              ))}
+        {/* Crowd Points */}
+        {data.points?.map((point, idx) => (
+          <CircleMarker
+            key={`point-${idx}`}
+            center={[point.lat, point.lon]}
+            radius={5}
+            color="#1e40af"
+            fillColor="#3b82f6"
+            fillOpacity={0.6}
+            weight={1}
+          >
+            <Popup>User Location</Popup>
+          </CircleMarker>
+        ))}
 
-              {/* Cluster Centroids */}
-              {clusters.map((cluster) => (
-                <CircleMarker
-                  key={`cluster-${cluster.id}`}
-                  center={[cluster.centroid_lat || cluster.lat, cluster.centroid_lon || cluster.lon]}
-                  radius={cluster.risk_flag ? 14 : 10}
-                  color={cluster.risk_flag ? "#dc2626" : "#16a34a"}
-                  fillColor={cluster.risk_flag ? "#ef4444" : "#22c55e"}
-                  fillOpacity={0.8}
-                  weight={2}
-                >
-                  <Popup>
-                    <strong>Cluster {String.fromCharCode(65 + (cluster.id % 26))}</strong><br />
-                    Size: {cluster.cluster_size || cluster.size} people<br />
-                    Risk: {cluster.risk_flag ? "🔴 HIGH" : "🟢 NORMAL"}
-                  </Popup>
-                </CircleMarker>
-              ))}
-            </MapContainer>
+        {/* Clusters */}
+        {data.clusters?.map((cluster, idx) => (
+          <CircleMarker
+            key={`cluster-${idx}`}
+            center={[cluster.centroid_lat || cluster.lat, cluster.centroid_lon || cluster.lon]}
+            radius={Math.max(10, (cluster.cluster_size || cluster.size || 1) / 2)}
+            color={cluster.risk_flag ? '#dc2626' : '#16a34a'}
+            fillColor={cluster.risk_flag ? '#ef4444' : '#22c55e'}
+            fillOpacity={0.8}
+            weight={3}
+          >
+            <Popup>
+              <strong>Cluster {idx + 1}</strong><br />
+              Size: {cluster.cluster_size || cluster.size} people<br />
+              Risk: {cluster.risk_flag ? '🔴 HIGH' : '🟢 LOW'}
+            </Popup>
+          </CircleMarker>
+        ))}
+      </MapContainer>
 
-            {/* Overlay Stats Panel */}
-            <div style={{
-              position: "absolute",
-              bottom: "1rem",
-              left: "1rem",
-              right: "1rem",
-              background: "#fff",
-              borderRadius: "8px",
-              padding: "1rem",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-              gap: "1rem",
-              zIndex: 500,
-            }}>
-              {/* Stats Cards */}
-              <div style={{ padding: "0.75rem", background: "#f0f9ff", borderRadius: "4px" }}>
-                <div style={{ fontSize: "0.8rem", color: "#666", fontWeight: "600" }}>Total Points</div>
-                <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#1e40af" }}>{crowd.points?.length || 0}</div>
-              </div>
-              <div style={{ padding: "0.75rem", background: "#f0fdf4", borderRadius: "4px" }}>
-                <div style={{ fontSize: "0.8rem", color: "#666", fontWeight: "600" }}>Active Clusters</div>
-                <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#16a34a" }}>{clusters.length}</div>
-              </div>
-              <div style={{ padding: "0.75rem", background: "#fef2f2", borderRadius: "4px" }}>
-                <div style={{ fontSize: "0.8rem", color: "#666", fontWeight: "600" }}>High Risk</div>
-                <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#dc2626" }}>{highRiskClusters.length}</div>
-              </div>
-              <div style={{ padding: "0.75rem", background: "#fef3c7", borderRadius: "4px" }}>
-                <div style={{ fontSize: "0.8rem", color: "#666", fontWeight: "600" }}>Density %</div>
-                <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#b45309" }}>
-                  {Math.round(((crowd.points?.length || 0) / 200) * 100)}%
-                </div>
-              </div>
-
-              {/* Controls */}
-              <div style={{ gridColumn: "1 / -1", display: "flex", gap: "0.5rem" }}>
-                <button
-                  onClick={() => setAutoRefresh((v) => !v)}
-                  style={{
-                    flex: 1,
-                    padding: "0.5rem 1rem",
-                    background: autoRefresh ? "#3b82f6" : "#9ca3af",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    fontWeight: "600",
-                    transition: "all 0.2s",
-                  }}
-                >
-                  {autoRefresh ? "⏸ Pause" : "▶ Resume"}
-                </button>
-                <button
-                  onClick={fetchData}
-                  style={{
-                    flex: 1,
-                    padding: "0.5rem 1rem",
-                    background: "#10b981",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    fontWeight: "600",
-                    transition: "all 0.2s",
-                  }}
-                >
-                  🔄 Refresh Now
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+      {/* Bottom Stats Panel */}
+      <div style={{
+        position: 'absolute',
+        bottom: '10px',
+        left: '10px',
+        right: '10px',
+        background: 'rgba(0, 0, 0, 0.85)',
+        color: 'white',
+        padding: '15px',
+        borderRadius: '8px',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+        gap: '10px',
+        backdropFilter: 'blur(10px)',
+        zIndex: 999
+      }}>
+        <div style={{ padding: '10px', background: 'rgba(59, 130, 246, 0.2)', borderRadius: '4px', borderLeft: '4px solid #3b82f6' }}>
+          <div style={{ fontSize: '0.8rem', color: '#aaa' }}>Total Points</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{data.points?.length || 0}</div>
+        </div>
+        <div style={{ padding: '10px', background: 'rgba(34, 197, 94, 0.2)', borderRadius: '4px', borderLeft: '4px solid #22c55e' }}>
+          <div style={{ fontSize: '0.8rem', color: '#aaa' }}>Active Clusters</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{data.clusters?.length || 0}</div>
+        </div>
+        <div style={{ padding: '10px', background: 'rgba(239, 68, 68, 0.2)', borderRadius: '4px', borderLeft: '4px solid #ef4444' }}>
+          <div style={{ fontSize: '0.8rem', color: '#aaa' }}>High Risk</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{data.clusters?.filter(c => c.risk_flag)?.length || 0}</div>
+        </div>
+        <div style={{ padding: '10px', background: 'rgba(255, 193, 7, 0.2)', borderRadius: '4px', borderLeft: '4px solid #ffc107' }}>
+          <div style={{ fontSize: '0.8rem', color: '#aaa' }}>Density %</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{Math.round(((data.points?.length || 0) / 200) * 100)}%</div>
+        </div>
       </div>
     </div>
   );
 }
+
+export default Home;
