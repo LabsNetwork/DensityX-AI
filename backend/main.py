@@ -116,7 +116,6 @@ def density_tick() -> None:
     if risk_clusters:
         print(f"[alert] High crowd density detected in {source}: {len(risk_clusters)} cluster(s) above threshold")
     print(f"[density] {source} clusters={n} sizes={sizes} risk_flags={risk}")
-    print(f"[density] {source} clusters={result['cluster_count']} sizes={result['cluster_sizes']} risk_flags={result['risk_flags']}")
 
 
 @asynccontextmanager
@@ -197,6 +196,34 @@ def api_info():
             "health": "/health",
             "dashboard": "/static/dashboard/index.html"
         }
+    }
+
+# System status endpoint with validation info
+@app.get("/status")
+def system_status():
+    """Comprehensive system status including ticket validation stats."""
+    from services.ticket_validator import get_validator
+    
+    validator = get_validator()
+    result = memory_store.get_last_density_result()
+    
+    return {
+        "status": "operational",
+        "mode": "SIMULATION" if settings.USE_SIMULATION else "REAL_TICKET_BASED",
+        "timestamp": __import__("datetime").datetime.utcnow().isoformat(),
+        "tickets": {
+            "total_valid": validator.count_valid_tickets(),
+            "sample": validator.get_sample_tickets(3),
+        },
+        "crowd": {
+            "total_points": len(memory_store.get_locations()) if settings.USE_SIMULATION else len(memory_store.get_gps_enabled_users()),
+            "active_clusters": result.get("cluster_count", 0) if result else 0,
+            "high_risk_clusters": len([c for c in result.get("clusters", []) if c.get("risk_flag")]) if result else 0,
+        },
+        "intervals": {
+            "update_interval_seconds": settings.UPDATE_INTERVAL_SECONDS,
+            "dbscan_interval_seconds": settings.DBSCAN_INTERVAL_SECONDS,
+        },
     }
 
 # Admin dashboard: map + heatmap + high-density overlay

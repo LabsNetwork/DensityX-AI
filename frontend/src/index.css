@@ -7,7 +7,7 @@ html, body, #root {
   width: 100%;
   margin: 0;
   padding: 0;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 body {
@@ -16,15 +16,29 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #f5f5f5;
+  background: #0f172a;
+  color: #ffffff;
 }
 
-/* Ensure Leaflet container has explicit height */
+/* Ensure root div takes full viewport */
+#root {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Leaflet container sizing */
 .leaflet-container {
-  height: 100vh !important;
-  width: 100vw !important;
+  height: 100% !important;
+  width: 100% !important;
 }
 
+/* Smooth scrolling for sidebars */
+.scrollable-panel {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Button styles */
 button {
   font-family: inherit;
   font-size: 1rem;
@@ -32,11 +46,35 @@ button {
   transition: all 0.3s ease;
 }
 
-button:hover {
+button:hover:not(:disabled) {
   opacity: 0.9;
   transform: translateY(-2px);
 }
 
-button:active {
+button:active:not(:disabled) {
   transform: translateY(0);
 }
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 212, 255, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 212, 255, 0.5);
+}
+

@@ -32,10 +32,6 @@ def get_crowd_locations(
     min_samples = min_cluster if min_cluster is not None else settings.DBSCAN_MIN_SAMPLES
     alert_thresh = alert_threshold if alert_threshold is not None else settings.CLUSTER_ALERT_THRESHOLD
     
-    # Debug: Print received parameters
-    print(f"[CLUSTERING] Received params: min_cluster={min_cluster}, eps={eps}, alert_threshold={alert_threshold}")
-    print(f"[CLUSTERING] Using values: min_samples={min_samples}, eps_km={eps_km}, alert_thresh={alert_thresh}")
-    
     # Convert km back to meters for run_dbscan
     eps_meters = eps_km * 1000
 
